@@ -3,6 +3,7 @@ from sklearn.decomposition import PCA
 from warnings import warn
 from typing import Any, Tuple
 import matplotlib.pyplot as plt
+import h5py
 def check_data_scale(dataset: np.ndarray) -> None:
     """Check that data is appropriate for PCA, meaning that each sample has 0
     mean and 1 std.
@@ -39,21 +40,46 @@ def check_data_scale(dataset: np.ndarray) -> None:
 
 
 class SSM:
-    def __init__(self, correspondences: np.ndarray) -> None:
+    def __init__(self, correspondences: np.ndarray, pre_eigenval= None, preeigenvec=None, ssm_path= None ) -> None:
         """
         Compute the SSM based on eigendecomposition.
         Args:
-            correspondences:    Corresponded shapes
+            correspondences:  Corresponded shapes
         """
-
         self.mean = np.mean(correspondences, 0)
         data_centered = correspondences - self.mean
         # data_centered = data_centered.transpose()
         cov_dual = np.matmul(data_centered.transpose(), data_centered) / (
             data_centered.shape[0] - 1
         )
-        # print("cov_dual shape", cov_dual.shape)
+       
+
+        # ssm_name = ssm_path.split("/")[-1]
+
         evals, evectors = np.linalg.eigh(cov_dual)
+
+        # if pre_eigenval is not None and preeigenvec is not None:
+        #      # print("cov_dual shape", cov_dual.shape)
+        #     evals, evectors = np.linalg.eigh(cov_dual)
+        #     # save the eigenvalues and eigenvectors for later use   
+        #     pre_eigenval = evals
+        #     preeigenvec = evectors
+        #     save_path = ssm_path
+
+        #     np.save(save_path + ssm_name + "_pre_eigenval.npy", pre_eigenval)
+        #     np.save(save_path + ssm_name + "_preeigenvec.npy", preeigenvec)
+        # else:
+
+        #     pre_eigenval= np.load(ssm_path + ssm_name + "_pre_eigenval.npy")
+        #     preeigenvec = np.load(ssm_path + ssm_name + "_preeigenvec.npy")
+        #     evals, evectors = pre_eigenval, preeigenvec
+
+
+
+        # self.save_eigenvals = evals
+        # self.save_eigenvecs = evectors
+
+
 
         evecs = evectors
         # Normalize the col-vectors
@@ -87,8 +113,59 @@ class SSM:
         self.variances_mode_number = self.variances[:required_mode_number]
         
         self.modes_scaled = np.multiply(self.modes_norm, np.sqrt(self.variances))
-        
 
+
+    def save_ssm(self, path: str, num_mode:int) -> None:
+        """
+        Save the SSM to a file
+        Args: path
+        """
+
+        print("self.mean shape:", self.mean.shape)
+        print("self.modes_norm shape:", self.modes_norm.shape)
+
+        # print("self.variances_mode_number shape:", self.variances_mode_number.shape)
+
+
+        np.savez(
+            path,
+            mean=self.mean,                  # mean shape
+            modes_norm=self.modes_norm[:, :num_mode],      # eigenvectors
+            variances=self.variances[:num_mode],        # eigenvalues
+            variance_mode_number=self.variances_mode_number,
+        )
+
+    def save_ssm_compressed(self, path: str) -> None:
+        """
+        Save the SSM to a file
+        Args: path
+        """
+        # np.savez(
+        #     path,
+        #     mean=self.mean,                  # mean shape
+        #     modes_norm=self.modes_norm,      # eigenvectors
+        #     modes_scaled=self.modes_scaled,
+        #     variances=self.variances,        # eigenvalues
+        #     variance_mode_number=self.variances_mode_number,
+        # )
+        np.savez_compressed(
+            path,
+            mean=self.mean,
+            modes_norm=self.modes_norm,
+            modes_scaled=self.modes_scaled,
+            variances=self.variances,
+            variance_mode_number=self.variances_mode_number,
+            compression='lzma'  # Or 'bz2'
+        )
+
+    def save_ssm_h5(self, path: str) -> None:
+        file_name = path + ".h5"
+        with h5py.File(file_name, 'w') as hf:
+            hf.create_dataset('mean', data=self.mean)
+            hf.create_dataset('modes_norm', data=self.modes_norm)
+            hf.create_dataset('modes_scaled', data=self.modes_scaled)
+            hf.create_dataset('variances', data=self.variances)
+            hf.create_dataset('variance_mode_number', data=self.variances_mode_number)
 
     def get_variance_num_modes(self, num_modes: int) -> np.ndarray:
         """

@@ -46,23 +46,23 @@ def get_correspondended_vertices(
         n_points:                       Number of points in SSM (flattened)
     """
     demo = np.load(path)
-    print("shape of demo",demo.shape)
+    # print("shape of demo",demo.shape)
     corresponded_vertices_all = np.transpose(np.load(path), (0, 2, 1))
 
-    print("corresponded_vertices_all shape:", corresponded_vertices_all.shape)
+    # print("corresponded_vertices_all shape:", corresponded_vertices_all.shape)
 
     n_shapes = corresponded_vertices_all.shape[2]
-    print("n_shapes:", n_shapes)
+    # print("n_shapes:", n_shapes)
     corresponded_vertices_all = corresponded_vertices_all.reshape(-1, n_shapes)
-    print("corresponded_vertices_all shape after reshape:", corresponded_vertices_all.shape)
+    # print("corresponded_vertices_all shape after reshape:", corresponded_vertices_all.shape)
 
     # corresponded_vertices_train = corresponded_vertices_all[:, idx_train_shapes]
     corresponded_vertices_train = corresponded_vertices_all[:, :]
 
     n_points = corresponded_vertices_train.shape[0]
 
-    print("check corresponded_vertices_train shape:", corresponded_vertices_train.shape)
-    print("check n_points:", n_points)
+    # print("check corresponded_vertices_train shape:", corresponded_vertices_train.shape)
+    # print("check n_points:", n_points)
 
     return corresponded_vertices_train, n_points
 

@@ -1,0 +1,10 @@
+cutlery
+box
+bottle
+tube
+glass
+teapot
+can
+cup
+remote
+shoe
