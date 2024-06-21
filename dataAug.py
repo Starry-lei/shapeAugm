@@ -355,7 +355,7 @@ if __name__ == "__main__":
         # samples = ssm.generate_similar_samples(n_samples = n_samples, n_modes=components_number, ref_shape_weight=ref_shape_weight)
         samples = ssm.generate_similar_samples_use_distribution(n_samples = n_samples, n_modes=components_number, ref_shape_weight=ref_shape_weight)
 
-        print("samples shape", samples.shape)
+        # print("samples shape", samples.shape)
 
         pc_points = []
         # pc_points.append(pc_ref_bk)
