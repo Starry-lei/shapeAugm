@@ -134,7 +134,8 @@ class PartSSMs:
 
             return data_proj
 
-        def generate_similar_samples(self, n_samples: int = 1, n_modes=None, ref_shape_weight=None) -> np.ndarray:
+        def generate_similar_samples_use_distribution(self, n_samples: int = 1, n_modes=None, ref_shape_weight=None,
+                                     distribution_variance=None) -> np.ndarray:
             """
             Generate similar samples from the SSM.
             Args:
@@ -142,7 +143,56 @@ class PartSSMs:
                 n_modes:    number of modes to use
             Returns:
                 samples:    Generated random samples
+
             """
+
+            distribution_variance = self.variances[:n_modes]
+
+            mean = np.zeros(n_modes)
+            cov = np.diag(distribution_variance)
+            weights = np.random.multivariate_normal(mean, cov, n_samples)
+            print("weights shape:", weights.shape)
+
+            # exit()
+            #
+            # variation_coeff = 0.1
+            if n_modes:
+                evecs = self.modes_norm[:, :n_modes]
+            else:
+                evecs = self.modes_norm
+
+            # added_noise = np.random.normal(0, variation_coeff,
+            #                                (ref_shape_weight.shape[0], ref_shape_weight.shape[1], n_samples))
+            # # print("added_noise shape:", added_noise) #added_noise shape: (6, 1, 10)
+            # print("added_noise shape:", added_noise.shape)  # added_noise shape: (6, 1)
+            #
+            # added_noise = (ref_shape_weight + np.transpose(added_noise, (2, 0, 1))).squeeze(2)
+
+            # print("added_noise shape:", added_noise.shape)  # added_noise shape: (10, 6)
+
+            # print("self.modes_scaled shape:", evecs.shape)  # self.modes_scaled shape: (6, 3)
+
+            # samples = self.mean + np.matmul(added_noise, evecs.transpose())
+            samples = self.mean + np.matmul(weights, evecs.transpose())
+
+            # samples = self.mean + np.matmul(weights, self.modes_scaled.transpose())
+
+            return np.squeeze(samples)
+
+        def generate_similar_samples(self, n_samples: int = 1, n_modes=None, ref_shape_weight=None, distribution_variance = None ) -> np.ndarray:
+            """
+            Generate similar samples from the SSM.
+            Args:
+                n_samples:  number of samples to generate
+                n_modes:    number of modes to use
+            Returns:
+                samples:    Generated random samples
+
+            """
+
+
+
+
 
             variation_coeff = 0.1
             if n_modes:
@@ -302,7 +352,9 @@ if __name__ == "__main__":
         # ref_shape_weight = ref_shape_weight.transpose(1, 0)
         # print("ref_shape_weight shape:", ref_shape_weight.shape)
 
-        samples = ssm.generate_similar_samples(n_samples = n_samples, n_modes=components_number, ref_shape_weight=ref_shape_weight)
+        # samples = ssm.generate_similar_samples(n_samples = n_samples, n_modes=components_number, ref_shape_weight=ref_shape_weight)
+        samples = ssm.generate_similar_samples_use_distribution(n_samples = n_samples, n_modes=components_number, ref_shape_weight=ref_shape_weight)
+
         print("samples shape", samples.shape)
 
         pc_points = []
